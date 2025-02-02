@@ -3,15 +3,15 @@ using BepInEx.Logging;
 using HarmonyLib;
 using UnityEngine;
 
-using FP2Lib.Player;
-
 namespace WorldMapCharacterSwitch
 {
-    [BepInPlugin(MyPluginInfo.PLUGIN_GUID, "WorldMapCharacterSwap", "1.0.0")]
+    [BepInPlugin("000.kuborro.plugin.fp2.worldmapcharaswap", "WorldMapCharacterSwap", "1.0.0")]
     //[BepInDependency("000.kuborro.libraries.fp2.fp2lib")]
     public class Plugin : BaseUnityPlugin
     {
+#pragma warning disable IDE0051 // Remove unused private members
         private void Awake()
+#pragma warning restore IDE0051 // Remove unused private members
         {
             Harmony.CreateAndPatchAll(typeof(PatchWorldMap));
         }
@@ -22,7 +22,7 @@ namespace WorldMapCharacterSwitch
     {
         private static bool charChanged;
         private static float fadeTimer = 0f;
-        internal static ManualLogSource Logger;
+        internal static ManualLogSource Logger = new ManualLogSource("WorldMapCharacterSwap");
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(MenuWorldMap), "Start", MethodType.Normal)]
@@ -54,7 +54,7 @@ namespace WorldMapCharacterSwitch
 
             if (FPStage.menuInput.specialHold && !charChanged)
             {
-                if ((int)character <= 4)
+                if ((int)character < 4)
                 {
                     character++;
                     if (character == FPCharacterID.BIKECAROL)
@@ -111,7 +111,7 @@ namespace WorldMapCharacterSwitch
             }
             if (FPStage.menuInput.specialHold && !charChanged)
             {
-                if ((int)character <= 4 || PlayerHandler.GetPlayableCharaByRuntimeId((int)character) != null)
+                if ((int)character < 4)
                 {
                     character++;
                     if (character == FPCharacterID.BIKECAROL)
