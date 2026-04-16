@@ -8,7 +8,7 @@ using BepInEx.Configuration;
 
 namespace WorldMapCharacterSwitch
 {
-    [BepInPlugin("000.kuborro.plugin.fp2.worldmapcharaswap", "WorldMapCharacterSwap", "2.0.0")]
+    [BepInPlugin("com.kuborro.plugin.fp2.worldmapcharaswap", "WorldMapCharacterSwap", "2.0.0")]
     [BepInDependency("000.kuborro.libraries.fp2.fp2lib")]
     public class WorldMapCharacterSwitch : BaseUnityPlugin
     {
@@ -17,7 +17,7 @@ namespace WorldMapCharacterSwitch
         private void Awake()
         {
             allowAllInAdventureMode = Config.Bind("General", "Allow incompatible characters in Adventure", false, "Setting this option will include even characters which might not work due to lacking code or assets");
-            ignoreDisabledInAdventure = Config.Bind("General", "Ignore Disabled In Adventure flag", true, "Setting this option will include even characters whose authors disabled them in Adventure Mode");
+            ignoreDisabledInAdventure = Config.Bind("General", "Ignore Disabled In Adventure flag", false, "Setting this option will include even characters whose authors disabled them in Adventure Mode");
             Harmony.CreateAndPatchAll(typeof(PatchWorldMap));
         }
     }
