@@ -69,6 +69,7 @@ namespace WorldMapCharacterSwitch
             }
 
             //Rebuild the list
+            moddedCharacters.Sort();
             availableCharacters = [.. availableBaseCharacters, .. moddedCharacters];
             //Set the right index
             index = availableCharacters.IndexOf(FPSaveManager.character);
