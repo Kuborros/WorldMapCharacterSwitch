@@ -83,7 +83,6 @@ namespace WorldMapCharacterSwitch
         [HarmonyPatch(typeof(MenuWorldMap),"Update",MethodType.Normal)]
         static void PatchAdventureUpdate(ref float ___movementTimer, int ___currentMap, ref int ___currentLocation, FPMap[] ___maps)
         {
-
             if (FPStage.menuInput.specialHold && !charChanged)
             {
                 //Play transition
@@ -133,14 +132,15 @@ namespace WorldMapCharacterSwitch
                     }
                     //Map reload logic
                     ___movementTimer = 0f;
-                    FPSaveManager.lastMap = ___currentMap;
                     if (___maps[___currentMap].locations[___currentLocation].type != FPMapLocationType.NONE) 
                     {
                         //Only set the map tile if we are in a 'safe' location that allows input. This prevents horrible softlocks.
                         FPSaveManager.lastMapLocation = ___currentLocation;
+                        FPSaveManager.lastMap = ___currentMap;
                     }
                     else
                     {
+                        //The position in file might belong to previous world map, so if its something stupid we need to reset it.
                         Logger.LogDebug("Player on unsafe tile! Resetting position.");
                     }
                     charChanged = false;
