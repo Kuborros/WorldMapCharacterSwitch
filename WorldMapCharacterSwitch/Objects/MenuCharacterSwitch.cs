@@ -1,6 +1,7 @@
 ﻿using BepInEx.Logging;
 using FP2Lib.Player;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -19,6 +20,9 @@ namespace WorldMapCharacterSwitch.Objects
 
         private int lastCharacterIndex = -1;
         private int selectedCharacterIndex = 0;
+
+        private bool transitionStarted = false;
+        private float fadeTimer = 0;
 
         private FPCharacterID targetCharacterID = FPCharacterID.LILAC;
 
@@ -52,7 +56,7 @@ namespace WorldMapCharacterSwitch.Objects
             //Add base game characters
             CharacterInfo lilac = new CharacterInfo
             {
-                id = 0,
+                id = FPCharacterID.LILAC,
                 name = "Lilac",
                 brokenInAdventure = false,
                 enabledInAdventure = true,
@@ -63,7 +67,7 @@ namespace WorldMapCharacterSwitch.Objects
 
             CharacterInfo carol = new CharacterInfo
             {
-                id = 1,
+                id = FPCharacterID.CAROL,
                 name = "Carol",
                 brokenInAdventure = false,
                 enabledInAdventure = true,
@@ -73,7 +77,7 @@ namespace WorldMapCharacterSwitch.Objects
 
             CharacterInfo milla = new CharacterInfo
             {
-                id = 3,
+                id = FPCharacterID.MILLA,
                 name = "Milla",
                 brokenInAdventure = false,
                 enabledInAdventure = true,
@@ -83,7 +87,7 @@ namespace WorldMapCharacterSwitch.Objects
 
             CharacterInfo neera = new CharacterInfo
             {
-                id = 4,
+                id = FPCharacterID.NEERA,
                 name = "Neera",
                 brokenInAdventure = false,
                 enabledInAdventure = true,
@@ -103,7 +107,7 @@ namespace WorldMapCharacterSwitch.Objects
 
                 CharacterInfo data = new CharacterInfo
                 {
-                    id = character.id,
+                    id = (FPCharacterID)character.id,
                     name = character.Name,
                     modded = true,
                     profilePic = character.profilePic,
@@ -224,18 +228,17 @@ namespace WorldMapCharacterSwitch.Objects
                     break;
             }
 
+            //Just in case:tm:
             if (currentCharacter == null) pfButtons[1].GetComponent<SpriteRenderer>().sprite = menuSpritesRegular[0];
-
-
 
             //Character info
             //Update only when needed
             if (lastCharacterIndex != selectedCharacterIndex)
             {
-                GameObject characterMapSpriteBox = gameObject.transform.GetChild(1).gameObject;
-                GameObject characterProfileBox = gameObject.transform.GetChild(2).gameObject;
-                GameObject characterSelectBox = gameObject.transform.GetChild(4).gameObject;
-                GameObject characterDescriptionBox = gameObject.transform.GetChild(5).gameObject;
+                GameObject characterMapSpriteBox = gameObject.transform.GetChild(1).GetChild(0).gameObject;
+                GameObject characterProfileBox = gameObject.transform.GetChild(2).GetChild(0).GetChild(0).gameObject;
+                GameObject characterSelectBox = gameObject.transform.GetChild(4).GetChild(0).gameObject;
+                GameObject characterDescriptionBox = gameObject.transform.GetChild(5).GetChild(0).gameObject;
 
                 //Drop out if things broke.
                 if (characterProfileBox == null) return;
@@ -243,16 +246,14 @@ namespace WorldMapCharacterSwitch.Objects
                 currentCharacter = characters[selectedCharacterIndex];
 
                 //Render current character
-                FPCharacterID characterID = (FPCharacterID)currentCharacter.id;
-
                 //Make sure we did not get a cursed broken stage
                 if (currentCharacter.id <= 0)
                 {
                     
                 }
 
-                MenuLogSource.LogDebug("Set character to ID: " + characterID);
-                targetCharacterID = characterID;
+                MenuLogSource.LogDebug("Set character to ID: " + currentCharacter.id);
+                targetCharacterID = currentCharacter.id;
                 lastCharacterIndex = selectedCharacterIndex;
             }
         }
@@ -329,18 +330,91 @@ namespace WorldMapCharacterSwitch.Objects
             {
                 genericTimer -= FPStage.deltaTime;
             }
-            //Handle Play and Exit buttons.
-            else if (FPStage.menuInput.confirm && menuSelection > 0)
+            //Switch Character
+            else if (FPStage.menuInput.confirm && menuSelection == 1)
             {
                 genericTimer = 0f;
-                state = new FPObjectState(State_Transition);
+
+                if (FPSaveManager.gameMode == FPGameMode.ADVENTURE)
+                    state = new FPObjectState(State_Transition_Adventure);
+                else 
+                    state = new FPObjectState(State_Transition_Classic);
+
                 cursor.optionSelected = true;
+                FPAudio.PlayMenuSfx(2);
+            }
+            //Exit
+            else if (menuSelection == buttonCount - 1 && (FPStage.menuInput.confirm || FPStage.menuInput.cancel))
+            {
+                Object.Destroy(gameObject);
                 FPAudio.PlayMenuSfx(2);
             }
             UpdateMenu();
         }
 
-        private void State_Transition()
+        private void State_Transition_Adventure()
+        {
+            if (genericTimer < 30f)
+            {
+                genericTimer += FPStage.deltaTime;
+            }
+            else
+            {
+                if (!transitionStarted)
+                {
+                    FPScreenTransition component = GameObject.Find("Screen Transition").GetComponent<FPScreenTransition>();
+                    component.transitionType = FPTransitionTypes.LOCAL_WIPE;
+                    component.transitionSpeed = 48f;
+                    component.SetTransitionColor(0f, 0f, 0f);
+                    component.BeginTransition();
+                    FPAudio.PlayMenuSfx(3);
+                    transitionStarted = true;
+                    fadeTimer = 0f;
+                }
+                else
+                {
+                    if (fadeTimer < 24f)
+                    {
+                        fadeTimer += FPStage.deltaTime;
+                    }
+                    else
+                    {
+                        //Set the character proper
+                        if (currentCharacter.id > FPCharacterID.NEERA)
+                        {
+                            PlayableChara newCharacter = PlayerHandler.GetPlayableCharaByRuntimeId((int)currentCharacter.id);
+                            if (newCharacter != null)
+                            {
+                                PlayerHandler.SwitchToCharacterByUID(newCharacter.uid);
+                            }
+                        }
+                        else
+                        {
+                            FPSaveManager.character = currentCharacter.id;
+                            PlayerHandler.currentCharacter = null;
+                        }
+                        /*
+                        //Map reload logic
+                        ___movementTimer = 0f;
+                        if (___maps[___currentMap].locations[___currentLocation].type != FPMapLocationType.NONE)
+                        {
+                            //Only set the map tile if we are in a 'safe' location that allows input. This prevents horrible softlocks.
+                            FPSaveManager.lastMapLocation = ___currentLocation;
+                            FPSaveManager.lastMap = ___currentMap;
+                        }
+                        else
+                        {
+                            //The position in file might belong to previous world map, so if its something stupid we need to reset it.
+                            MenuLogSource.LogDebug("Player on unsafe tile! Resetting position.");
+                        }
+                        */
+                        FPStage.LoadScene("AdventureMenu");
+                    }
+                }
+            }
+        }
+
+        private void State_Transition_Classic()
         {
             if (genericTimer < 30f)
             {

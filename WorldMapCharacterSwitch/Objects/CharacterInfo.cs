@@ -5,7 +5,7 @@ namespace WorldMapCharacterSwitch.Objects
 {
     internal class CharacterInfo
     {
-        internal int id;
+        internal FPCharacterID id;
         internal String name;
         internal bool modded;
         internal bool enabledInAdventure;
@@ -15,7 +15,7 @@ namespace WorldMapCharacterSwitch.Objects
 
         public CharacterInfo(int id, string name, bool enabledInAdventure, bool brokenInAdventure, Sprite profilePic, Sprite[] mapIdle)
         {
-            this.id = id;
+            this.id = (FPCharacterID)id;
             this.name = name;
             this.enabledInAdventure = enabledInAdventure;
             this.brokenInAdventure = brokenInAdventure;
