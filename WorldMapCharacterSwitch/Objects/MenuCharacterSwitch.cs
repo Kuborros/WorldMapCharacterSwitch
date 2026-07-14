@@ -239,6 +239,8 @@ namespace WorldMapCharacterSwitch.Objects
                     }
                 }
             }
+            transform.position = new Vector3(transform.position.x, transform.position.y * (num - 1f) / num, transform.position.z);
+
             //Update button visuals
             switch (menuSelection)
             {
@@ -272,7 +274,7 @@ namespace WorldMapCharacterSwitch.Objects
                 GameObject characterSelectBox = menuOptions.transform.GetChild(1).gameObject;
                 GameObject characterDescriptionBox = gameObject.transform.GetChild(4).GetChild(0).gameObject;
 
-                string adventureStatus, classicStatus = "<c=green>Available</c>", extraAdventureInfo;
+                string adventureStatus, classicStatus = "<c=green>available</c>", extraAdventureInfo;
 
                 //Drop out if things broke.
                 if (characterProfileBox == null) return;
@@ -291,37 +293,37 @@ namespace WorldMapCharacterSwitch.Objects
                     //Character broken in adventure (*will* crash if switched to)
                     if (currentCharacter.brokenInAdventure)
                     {
-                        adventureStatus = "<c=red>Broken</c>";
+                        adventureStatus = "<c=red>broken</c>";
                         extraAdventureInfo = " (Missing critical sprites)";
                         switchBlocked = (FPSaveManager.gameMode == FPGameMode.ADVENTURE);
                     }
                     //Character disabled in adventure, and override not enabled
                     else if (!currentCharacter.enabledInAdventure && !WorldMapCharacterSwitch.ignoreDisabledInAdventure.Value)
                     {
-                        adventureStatus = "<c=red>Disabled</c>";
-                        extraAdventureInfo = " (By the mod author)";
+                        adventureStatus = "<c=red>unavailable</c>";
+                        extraAdventureInfo = " (Disabled by mod author)";
                         switchBlocked = (FPSaveManager.gameMode == FPGameMode.ADVENTURE);
                     }
                     //Character disabled in adventure, but override enabled
                     else if (!currentCharacter.enabledInAdventure && WorldMapCharacterSwitch.ignoreDisabledInAdventure.Value)
                     {
-                        adventureStatus = "<c=yellow>Force Enabled</c>";
-                        extraAdventureInfo = " (By a config option)";
+                        adventureStatus = "<c=yellow>available</c>";
+                        extraAdventureInfo = " (Forced by a config option)";
                         characterDescriptionBox.GetComponent<SuperTextMesh>().text = "";
                         switchBlocked = false;
                     }
                     //Character fully functional
                     else
                     {
-                        adventureStatus = "<c=green>Available</c>";
+                        adventureStatus = "<c=green>available</c>";
                         extraAdventureInfo = "";
                         switchBlocked = false;
                     }
 
 
                     //Assemble final description
-                    characterDescriptionBox.GetComponent<SuperTextMesh>().text = "This character is " + classicStatus + " in <c=blue>Classic Mode</c>.<br>" +
-                        "They are " + adventureStatus + " in <c=blue>Adventure Mode</c>." + extraAdventureInfo;
+                    characterDescriptionBox.GetComponent<SuperTextMesh>().text = "This character is " + classicStatus + " in <c=orange>Classic Mode</c>.<br>" +
+                        "They are " + adventureStatus + " in <c=orange>Adventure Mode</c>." + extraAdventureInfo;
 
                     //If we are already that character, prevent switching
                     if (currentCharacter.id == FPSaveManager.character)
