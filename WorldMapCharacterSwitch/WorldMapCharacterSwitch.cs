@@ -21,6 +21,8 @@ namespace WorldMapCharacterSwitch
 
         private void Awake()
         {
+            Logger = base.Logger;
+
             allowAllInAdventureMode = Config.Bind("General", "Allow incompatible characters in Adventure", false, "Setting this option will include even characters which might not work due to lacking code or assets");
             ignoreDisabledInAdventure = Config.Bind("General", "Ignore Disabled In Adventure flag", false, "Setting this option will include even characters whose authors disabled them in Adventure Mode");
 
